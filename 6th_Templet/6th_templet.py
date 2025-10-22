@@ -1,43 +1,50 @@
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 
-# Load main image and template
-img = cv2.imread('dhoni-virat.jpg', 0)   # larger image (grayscale)
-template = cv2.imread('virat.jpg', 0)  # template (grayscale)
+# Load image and template in grayscale
+img_path = r"D:\Sem_3_Lab\CV\6th_Templet\rohit.png"
+template_path = r"D:\Sem_3_Lab\CV\6th_Templet\rohit1.png"
 
-if img is None or template is None:
-    print("Could not open or find the image/template.")
-    exit()
+img_gray = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+template_gray = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
 
-# Template width and height
-w, h = template.shape[::-1]
+th, tw = template_gray.shape
 
-# Perform template matching (using correlation coefficient method)
-res = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
+methods = {
+    'TM_CCOEFF': cv2.TM_CCOEFF,
+    'TM_CCOEFF_NORMED': cv2.TM_CCOEFF_NORMED,
+    'TM_CCORR': cv2.TM_CCORR,
+    'TM_CCORR_NORMED': cv2.TM_CCORR_NORMED,
+    'TM_SQDIFF': cv2.TM_SQDIFF,
+    'TM_SQDIFF_NORMED': cv2.TM_SQDIFF_NORMED
+}
 
-# Find location of best match
-min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+plt.figure(figsize=(15, 12))  # Large figure for all subplots
 
-# Top-left and bottom-right coordinates of matched area
-top_left = max_loc
-bottom_right = (top_left[0] + w, top_left[1] + h)
+for idx, (method_name, method) in enumerate(methods.items(), 1):
+    result = cv2.matchTemplate(img_gray, template_gray, method)
 
-# Draw rectangle on match
-result_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-cv2.rectangle(result_img, top_left, bottom_right, (0, 0, 255), 2)
+    # For SQDIFF methods, minimum value is better; otherwise maximum
+    if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        top_left = min_loc
+    else:
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        top_left = max_loc
 
-# Plot results
-plt.figure(figsize=(10,5))
+    # Draw rectangle on a copy of the image
+    img_copy = img_gray.copy()
+    bottom_right = (top_left[0] + tw, top_left[1] + th)
+    img_color = cv2.cvtColor(img_copy, cv2.COLOR_GRAY2RGB)
+    cv2.rectangle(img_color, top_left, bottom_right, (255, 0, 0), 2)
 
-plt.subplot(1,2,1)
-plt.imshow(img, cmap='gray')
-plt.title("Original Image")
-plt.axis("off")
+    # Plot in subplot
+    plt.subplot(3, 2, idx)  # 3 rows, 2 columns
+    plt.imshow(img_color, cmap='gray')
+    plt.title(method_name)
+    plt.axis('off')
 
-plt.subplot(1,2,2)
-plt.imshow(result_img)
-plt.title("Template Matched")
-plt.axis("off")
-
-plt.tight_layout()
+plt.suptitle("Template Matching - All Methods", fontsize=16)
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.show()
