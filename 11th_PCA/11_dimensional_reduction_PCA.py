@@ -1,28 +1,18 @@
-#pip install scikit-learn matplotlib numpy opencv-python
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import fetch_olivetti_faces
-from sklearn.decomposition import PCA, DictionaryLearning
-from sklearn.linear_model import OrthogonalMatchingPursuit
+from sklearn.decomposition import PCA
 
 # Step 1: Load sample face images
 faces = fetch_olivetti_faces(shuffle=True, random_state=42)
-X = faces.data  # Each image is flattened to a 1D vector
+X = faces.data 
 image_shape = (64, 64)
 
 # Step 2: Apply PCA for dimensionality reduction
-n_components_pca = 100
-pca = PCA(n_components=n_components_pca, whiten=True, random_state=42)
-X_pca = pca.fit_transform(X)
+model = PCA(n_components=100)
+X_pca = model.fit_transform(X)
 
-# Step 3: Use Dictionary Learning for sparse coding
-n_components_dict = 100
-dict_learner = DictionaryLearning(n_components=n_components_dict, transform_algorithm='omp', transform_n_nonzero_coefs=10, random_state=42)
-X_dict = dict_learner.fit_transform(X_pca)
-
-# Step 4: Reconstruct the image using sparse representation
-X_reconstructed = np.dot(X_dict, dict_learner.components_)
-X_reconstructed = pca.inverse_transform(X_reconstructed)
+X_reconstructed = model.inverse_transform(X_pca)
 
 # Helper function to plot original and reconstructed images
 def plot_images(original, reconstructed, n=5):
